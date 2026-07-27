@@ -1,4 +1,7 @@
 /**
+ * This file was generated with the assistance of AI.
+ */
+/**
  * game.js – Game Module
  *
  * Bridges the side-scrolling runner scene with the application.
@@ -62,6 +65,37 @@ const Game = {
         document.addEventListener('keydown', this._onKeyDown);
         document.addEventListener('keyup', this._onKeyUp);
 
+        // Touch — register on the canvas so only game-area touches are captured
+        this._onTouchStart = (e) => {
+            e.preventDefault(); // prevent scrolling / zooming on the canvas
+            const t = e.touches[0];
+            if (t && this.scene) {
+                const rect = this.canvas.getBoundingClientRect();
+                this.scene.handleTouchStart(
+                    t.clientX - rect.left,
+                    t.clientY - rect.top
+                );
+            }
+        };
+        this._onTouchMove = (e) => {
+            e.preventDefault();
+            const t = e.touches[0];
+            if (t && this.scene) {
+                const rect = this.canvas.getBoundingClientRect();
+                this.scene.handleTouchMove(
+                    t.clientX - rect.left,
+                    t.clientY - rect.top
+                );
+            }
+        };
+        this._onTouchEnd = (e) => {
+            e.preventDefault();
+            if (this.scene) this.scene.handleTouchEnd();
+        };
+        this.canvas.addEventListener('touchstart', this._onTouchStart, { passive: false });
+        this.canvas.addEventListener('touchmove', this._onTouchMove, { passive: false });
+        this.canvas.addEventListener('touchend', this._onTouchEnd, { passive: false });
+
         // Resize
         this._onResize = () => {
             this._resizeCanvas();
@@ -106,6 +140,11 @@ const Game = {
         this.stop();
         document.removeEventListener('keydown', this._onKeyDown);
         document.removeEventListener('keyup', this._onKeyUp);
+        if (this.canvas) {
+            this.canvas.removeEventListener('touchstart', this._onTouchStart);
+            this.canvas.removeEventListener('touchmove', this._onTouchMove);
+            this.canvas.removeEventListener('touchend', this._onTouchEnd);
+        }
         window.removeEventListener('resize', this._onResize);
         this.canvas = null;
         this.scene = null;

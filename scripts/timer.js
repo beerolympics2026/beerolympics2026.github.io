@@ -1,4 +1,7 @@
 /**
+ * This file was generated with the assistance of AI.
+ */
+/**
  * timer.js – Unlock Timer Manager
  *
  * Manages the countdown after the website is unlocked.

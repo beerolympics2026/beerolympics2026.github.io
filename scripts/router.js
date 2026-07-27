@@ -1,4 +1,7 @@
 /**
+ * This file was generated with the assistance of AI.
+ */
+/**
  * router.js – Client-Side Page Router
  *
  * Loads HTML fragments into the main content area based on the URL hash.

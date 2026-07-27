@@ -1,4 +1,7 @@
 /**
+ * This file was generated with the assistance of AI.
+ */
+/**
  * state.js – Application State Manager
  *
  * Central store for all application state.

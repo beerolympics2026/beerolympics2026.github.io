@@ -1,4 +1,7 @@
 /**
+ * This file was generated with the assistance of AI.
+ */
+/**
  * obstacle.js – Obstacle Entities
  *
  * Beer mugs at two height levels: floor (jump over) or

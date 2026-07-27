@@ -1,4 +1,7 @@
 /**
+ * This file was generated with the assistance of AI.
+ */
+/**
  * audio.js – Audio Manager
  *
  * Handles background music and sound effects.

@@ -1,4 +1,7 @@
 /**
+ * This file was generated with the assistance of AI.
+ */
+/**
  * player.js – Player Entity (Side-scrolling runner)
  *
  * Fixed horizontal position. Can jump over floor mugs and

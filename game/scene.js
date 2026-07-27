@@ -1,4 +1,7 @@
 /**
+ * This file was generated with the assistance of AI.
+ */
+/**
  * scene.js – Game Scene (Side-scrolling runner)
  *
  * Flat ground. Jump over floor-level beer mugs, walk under
@@ -87,10 +90,7 @@ export default class Scene {
         if (this.gameOver) return;
         if (e.code === 'Space' || e.code === 'ArrowUp') {
             e.preventDefault();
-            if (this.player && this.player.isOnGround && this._onJump) {
-                this._onJump();
-            }
-            if (this.player) this.player.jump();
+            this._performJump();
         }
         if (e.code === 'ArrowDown') {
             e.preventDefault();
@@ -102,6 +102,70 @@ export default class Scene {
         if (e.code === 'ArrowDown') {
             if (this.player) this.player.setDucking(false);
         }
+    }
+
+    /* ── Touch Input ──
+     *  Tap            → jump
+     *  Swipe down     → duck (while finger held)
+     *
+     *  The game canvas registers touch events and forwards them here.
+     */
+
+    /**
+     * Called on touchstart.
+     * Records the start position and time for swipe detection.
+     * A quick tap (no significant movement) triggers a jump.
+     * @param {number} x  Touch X
+     * @param {number} y  Touch Y
+     */
+    handleTouchStart(x, y) {
+        if (this.gameOver) return;
+        this._touchStartX = x;
+        this._touchStartY = y;
+        this._touchStartTime = performance.now();
+        this._touchMoved = false;
+
+        // Immediate jump on touch — the swipe-down duck check
+        // happens on move/end so the player can react to obstacles.
+        this._performJump();
+    }
+
+    /**
+     * Called on touchmove.
+     * If the finger moves significantly downward, switch to ducking.
+     * @param {number} x  Touch X
+     * @param {number} y  Touch Y
+     */
+    handleTouchMove(x, y) {
+        if (this.gameOver) return;
+        const dx = x - (this._touchStartX || 0);
+        const dy = y - (this._touchStartY || 0);
+
+        // If the user swipes downward, engage ducking
+        if (dy > 20 && Math.abs(dy) > Math.abs(dx)) {
+            this._touchMoved = true;
+            if (this.player) this.player.setDucking(true);
+        }
+    }
+
+    /**
+     * Called on touchend.
+     * Releases ducking if it was active.
+     */
+    handleTouchEnd() {
+        if (this.player && this.player.isDucking) {
+            this.player.setDucking(false);
+        }
+        this._touchMoved = false;
+    }
+
+    /** @private Shared jump logic for keyboard and touch. */
+    _performJump() {
+        if (this.gameOver) return;
+        if (this.player && this.player.isOnGround && this._onJump) {
+            this._onJump();
+        }
+        if (this.player) this.player.jump();
     }
 
     /* ── Main loop ── */

@@ -1,3 +1,4 @@
+/* This file was generated with the assistance of AI. */
 /* ═══════════════════════════════════════════════
    main.css – Base Styles & Layout
    ═══════════════════════════════════════════════ */
@@ -502,18 +503,276 @@ html, body {
     border: 1px solid rgba(255, 82, 82, 0.3);
 }
 
-/* ── Responsive ── */
-@media (max-width: 600px) {
+/* ── Touch-Action: prevent browser gestures on the game canvas ── */
+#game-canvas {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* ── Mobile Tap Hint ── */
+#mobile-tap-hint {
+    position: absolute;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.6rem 1.4rem;
+    background: rgba(15, 15, 26, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    color: #aaa;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-align: center;
+    pointer-events: none;
+    z-index: 20;
+    transition: opacity 0.5s ease;
+    white-space: nowrap;
+}
+
+#mobile-tap-hint.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+#mobile-tap-hint .hint-icon {
+    display: inline-block;
+    margin-right: 0.4rem;
+    font-size: 1rem;
+    vertical-align: middle;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ── Safe-area padding for notched phones ── */
+#main-nav {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+#page-content {
+    padding-bottom: max(3rem, env(safe-area-inset-bottom, 3rem));
+}
+
+/* ── Responsive: Tablet (≤ 768px) ── */
+@media (max-width: 768px) {
+    .intro-title {
+        font-size: 2.4rem;
+    }
+
+    .intro-subtitle {
+        font-size: 1rem;
+    }
+
+    .page-section h1 {
+        font-size: 1.8rem;
+    }
+
+    .page-section h2 {
+        font-size: 1.15rem;
+    }
+
+    .overlay-content h2 {
+        font-size: 1.6rem;
+    }
+
+    .overlay-content p {
+        font-size: 0.9rem;
+    }
+
+    /* Nav: horizontal scroll, no wrapping */
+    #main-nav ul {
+        max-width: none;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;          /* Firefox */
+    }
+
+    #main-nav ul::-webkit-scrollbar {
+        display: none;                  /* Chrome/Safari */
+    }
+
+    #main-nav a {
+        padding: 0.8rem 1.2rem;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    /* Page content */
+    #page-content {
+        padding: 2rem 1.25rem;
+    }
+
+    /* Cards */
+    .page-section .card-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+    }
+
+    .page-section .card {
+        padding: 1.5rem 1rem;
+    }
+
+    /* Timer text */
+    #access-timer-text {
+        font-size: 0.7rem;
+        top: 6px;
+        right: 10px;
+    }
+
+    /* Cheat button */
+    #cheat-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+    }
+
+    /* Contact form */
+    .contact-form {
+        max-width: 100%;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        font-size: 16px;              /* prevents iOS zoom on focus */
+    }
+}
+
+/* ── Responsive: Mobile (≤ 480px) ── */
+@media (max-width: 480px) {
+    html, body {
+        font-size: 15px;
+    }
+
     .intro-title {
         font-size: 2rem;
     }
 
+    .intro-subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+    }
+
+    .btn {
+        padding: 0.85rem 2rem;
+        font-size: 1rem;
+    }
+
+    /* Nav compact */
     #main-nav a {
-        padding: 0.8rem 1rem;
+        padding: 0.7rem 1rem;
+        font-size: 0.8rem;
+        letter-spacing: 0;
+    }
+
+    /* Page content tighter */
+    #page-content {
+        padding: 1.5rem 1rem;
+    }
+
+    .page-section h1 {
+        font-size: 1.6rem;
+        margin-bottom: 1rem;
+    }
+
+    .page-section p {
+        font-size: 0.95rem;
+    }
+
+    /* Cards stack to 2 columns */
+    .page-section .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .page-section .card {
+        padding: 1.25rem 0.75rem;
+    }
+
+    .page-section .card .icon {
+        font-size: 1.6rem;
+    }
+
+    .page-section .card h3 {
+        font-size: 0.9rem;
+    }
+
+    .page-section .card p {
+        font-size: 0.78rem;
+    }
+
+    /* Placeholder box */
+    .page-section .placeholder-box {
+        padding: 2rem 1rem;
         font-size: 0.85rem;
     }
 
-    #page-content {
-        padding: 2rem 1rem;
+    /* Game HUD */
+    #game-hud {
+        font-size: 0.85rem;
+        top: 0.6rem;
+        left: 0.6rem;
+    }
+
+    /* Game overlay */
+    .overlay-content h2 {
+        font-size: 1.4rem;
+    }
+
+    .overlay-content p {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .btn-secondary {
+        padding: 0.7rem 1.5rem;
+    }
+
+    /* Timer text */
+    #access-timer-text {
+        font-size: 0.65rem;
+    }
+
+    /* Contact form full width */
+    .form-group label {
+        font-size: 0.78rem;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        padding: 0.65rem 0.75rem;
+        font-size: 16px;
+    }
+}
+
+/* ── Landscape mobile: give the game more vertical space ── */
+@media (max-height: 480px) and (orientation: landscape) {
+    #game-hud {
+        top: 0.4rem;
+        left: 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    #mobile-tap-hint {
+        bottom: 8%;
+        font-size: 0.78rem;
+        padding: 0.4rem 1rem;
+    }
+
+    .overlay-content h2 {
+        font-size: 1.3rem;
+    }
+
+    .overlay-content p {
+        margin-bottom: 0.8rem;
+    }
+}
+
+/* ── Desktop hover/fine pointer only ── */
+@media (hover: hover) and (pointer: fine) {
+    #mobile-tap-hint {
+        display: none;
     }
 }
