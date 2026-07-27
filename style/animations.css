@@ -1,0 +1,72 @@
+/* ═══════════════════════════════════════════════
+   animations.css – Keyframes & Transitions
+   ═══════════════════════════════════════════════ */
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes fade-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+@keyframes loading-fill {
+    0%   { width: 0%; }
+    50%  { width: 70%; }
+    100% { width: 100%; }
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.6; }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+}
+
+/* Utility animation classes */
+.animate-fade-in {
+    animation: fade-in 0.6s ease forwards;
+}
+
+.animate-fade-in-up {
+    animation: fade-in-up 0.6s ease forwards;
+}
+
+.animate-slide-up {
+    animation: slide-up 0.6s ease forwards;
+}
+
+.animate-pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-bounce {
+    animation: bounce 0.4s ease;
+}

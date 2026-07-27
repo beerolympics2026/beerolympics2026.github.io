@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project</title>
+    <link rel="stylesheet" href="style/main.css" />
+    <link rel="stylesheet" href="style/animations.css" />
+</head>
+<body>
+    <!-- ── Loading Screen ── -->
+    <div id="loading-screen" class="screen">
+        <div class="loading-content">
+            <h1 class="loading-title">Loading…</h1>
+            <div class="loading-bar">
+                <div class="loading-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Intro Screen ── -->
+    <div id="intro-screen" class="screen hidden">
+        <div class="intro-content">
+            <h1 class="intro-title">Welcome</h1>
+            <p class="intro-subtitle">Complete the game to unlock this site.</p>
+            <button id="start-button" class="btn btn-primary">Start</button>
+        </div>
+    </div>
+
+    <!-- ── Game Screen ── -->
+    <div id="game-screen" class="screen hidden">
+        <canvas id="game-canvas"></canvas>
+        <div id="game-hud">
+            <span id="game-score">Score: 0</span>
+        </div>
+        <button id="cheat-btn" title="???" aria-label="Secret">?</button>
+        <div id="game-overlay" class="hidden">
+            <div class="overlay-content">
+                <h2 id="game-result-title">Game Over</h2>
+                <p id="game-result-message"></p>
+                <button id="game-restart-btn" class="btn btn-secondary">Restart</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Website Container (hidden until unlocked) ── -->
+    <div id="website-container" class="screen hidden">
+        <!-- Timer Bar -->
+        <div id="access-timer-bar">
+            <span id="access-timer-text">10:00 remaining</span>
+            <div id="access-timer-fill"></div>
+        </div>
+
+        <!-- Navigation -->
+        <nav id="main-nav">
+            <ul>
+                <li><a href="#home" class="nav-link active" data-page="home">Home</a></li>
+                <li><a href="#gallery" class="nav-link" data-page="gallery">Gallery</a></li>
+                <li><a href="#about" class="nav-link" data-page="about">About</a></li>
+                <li><a href="#contact" class="nav-link" data-page="contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <main id="page-content"></main>
+    </div>
+
+    <script type="module" src="scripts/app.js"></script>
+</body>
+</html>

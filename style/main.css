@@ -1,0 +1,519 @@
+/* ═══════════════════════════════════════════════
+   main.css – Base Styles & Layout
+   ═══════════════════════════════════════════════ */
+
+/* ── Theme Variables ── */
+:root {
+    --theme-primary:   #015AA2;
+    --theme-secondary: #FFF200;
+    --theme-accent:    #EE1C25;
+    --theme-bg:        #0f0f1a;
+    --theme-text:      #e0e0e0;
+    --theme-surface:   #15152a;
+    --theme-border:    #2a2a3e;
+    --theme-nav-bg:    rgba(15, 15, 26, 0.95);
+    --theme-nav-active: #015AA2;
+}
+
+/* Page-specific theme overrides */
+.theme-home {
+    --theme-primary:   #2490D7;
+    --theme-secondary: #172B4D;
+    --theme-accent:    #2490D7;
+    --theme-nav-active: #2490D7;
+}
+
+.theme-gallery {
+    --theme-primary:   #cd1316;
+    --theme-secondary: #ffd400;
+    --theme-accent:    #ffd400;
+    --theme-nav-active: #cd1316;
+}
+
+.theme-about {
+    --theme-primary:   #e20079;
+    --theme-secondary: #ffffff;
+    --theme-accent:    #ffffff;
+    --theme-nav-active: #e20079;
+}
+
+.theme-contact {
+    --theme-primary:   #015AA2;
+    --theme-secondary: #FFF200;
+    --theme-accent:    #EE1C25;
+    --theme-nav-active: #015AA2;
+}
+
+/* ── Reset ── */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--theme-bg);
+    color: var(--theme-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Screen Overlays ── */
+.screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* ── Loading Screen ── */
+#loading-screen {
+    background: #0f0f1a;
+    z-index: 100;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-title {
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    margin-bottom: 1.5rem;
+    color: #888;
+}
+
+.loading-bar {
+    width: 240px;
+    height: 4px;
+    background: #2a2a3e;
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.loading-fill {
+    width: 0%;
+    height: 100%;
+    background: #6c63ff;
+    border-radius: 2px;
+    animation: loading-fill 1.5s ease-in-out forwards;
+}
+
+/* ── Intro Screen ── */
+#intro-screen {
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+    z-index: 90;
+}
+
+.intro-content {
+    text-align: center;
+    animation: fade-in-up 0.8s ease-out;
+}
+
+.intro-title {
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #015AA2, #EE1C25);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+}
+
+.intro-subtitle {
+    font-size: 1.1rem;
+    color: #888;
+    margin-bottom: 2.5rem;
+}
+
+/* ── Buttons ── */
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.8rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.25s, background 0.25s;
+    text-decoration: none;
+    letter-spacing: 0.01em;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(1, 90, 162, 0.25);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #015AA2, #EE1C25);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 8px 24px rgba(238, 28, 37, 0.3);
+}
+
+.btn-secondary {
+    background: var(--theme-surface);
+    color: var(--theme-text);
+    border: 1px solid var(--theme-border);
+}
+
+.btn-secondary:hover {
+    background: #1e1e38;
+}
+
+/* ── Game Screen ── */
+#game-screen {
+    background: #0f0f1a;
+    z-index: 80;
+    flex-direction: column;
+}
+
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#game-hud {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    font-family: monospace;
+    font-size: 1rem;
+    color: #888;
+    pointer-events: none;
+}
+
+#game-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 15, 26, 0.85);
+    z-index: 10;
+    transition: opacity 0.3s ease;
+}
+
+#game-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.overlay-content {
+    text-align: center;
+    animation: fade-in-up 0.4s ease-out;
+}
+
+.overlay-content h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.overlay-content p {
+    color: #888;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Secret skip button ── */
+#cheat-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.15);
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 15;
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#cheat-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Website Container ── */
+#website-container {
+    background: #0f0f1a;
+    z-index: 70;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+/* ── Timer Bar ── */
+#access-timer-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--theme-border);
+    z-index: 200;
+}
+
+#access-timer-fill {
+    height: 100%;
+    width: 100%;
+    background: var(--theme-primary);
+    transition: width 1s linear;
+}
+
+#access-timer-text {
+    position: fixed;
+    top: 8px;
+    right: 16px;
+    font-size: 0.8rem;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: #888;
+    z-index: 201;
+}
+
+/* ── Navigation ── */
+#main-nav {
+    background: var(--theme-nav-bg);
+    border-bottom: 1px solid var(--theme-border);
+    padding: 0 1rem;
+    flex-shrink: 0;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+#main-nav ul {
+    list-style: none;
+    display: flex;
+    gap: 0;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+#main-nav a {
+    display: block;
+    padding: 1rem 1.5rem;
+    color: #777;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    transition: color 0.25s, border-color 0.25s;
+    border-bottom: 2px solid transparent;
+}
+
+#main-nav a:hover {
+    color: var(--theme-text);
+}
+
+#main-nav a.active {
+    color: var(--theme-nav-active);
+    border-bottom-color: var(--theme-nav-active);
+}
+
+/* ── Page Content ── */
+#page-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 3rem 1.5rem;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* ── Page Layout ── */
+.page-section {
+    animation: fade-in-up 0.5s ease-out;
+}
+
+.page-section h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    color: var(--theme-primary);
+    letter-spacing: -0.02em;
+}
+
+.page-section h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--theme-text);
+}
+
+.page-section p {
+    color: #aaa;
+    line-height: 1.75;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.page-section .placeholder-box {
+    border: 2px dashed var(--theme-border);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    color: #555;
+    margin: 2rem 0;
+    font-size: 0.95rem;
+}
+
+.page-section .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.25rem;
+    margin: 2rem 0;
+}
+
+.page-section .card {
+    background: var(--theme-surface);
+    border: 1px solid var(--theme-border);
+    border-radius: 12px;
+    padding: 2rem 1.25rem;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.page-section .card:hover {
+    transform: translateY(-4px);
+    border-color: var(--theme-primary);
+}
+
+.page-section .card .icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.page-section .card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--theme-text);
+    margin-bottom: 0.3rem;
+}
+
+.page-section .card p {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0;
+}
+
+.page-section .accent-line {
+    width: 50px;
+    height: 3px;
+    background: var(--theme-primary);
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Contact Form ── */
+.contact-form {
+    margin: 2rem 0;
+    max-width: 520px;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: #999;
+    margin-bottom: 0.4rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--theme-surface);
+    border: 1px solid var(--theme-border);
+    border-radius: 8px;
+    color: var(--theme-text);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 3px rgba(1, 90, 162, 0.15);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #555;
+}
+
+.form-status {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+}
+
+.form-status.hidden {
+    display: none;
+}
+
+.form-success {
+    color: #4caf50;
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.form-error {
+    color: #ff5252;
+    background: rgba(255, 82, 82, 0.1);
+    border: 1px solid rgba(255, 82, 82, 0.3);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+    .intro-title {
+        font-size: 2rem;
+    }
+
+    #main-nav a {
+        padding: 0.8rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    #page-content {
+        padding: 2rem 1rem;
+    }
+}

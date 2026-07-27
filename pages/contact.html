@@ -1,0 +1,82 @@
+<section class="page-section">
+    <div class="accent-line"></div>
+    <h1>Contact</h1>
+    <p>Send me a message using the form below.</p>
+
+    <form id="contact-form" class="contact-form">
+        <div class="form-group">
+            <label for="cf-name">Name</label>
+            <input type="text" id="cf-name" name="name" required placeholder="Your name" />
+        </div>
+
+        <div class="form-group">
+            <label for="cf-email">Email</label>
+            <input type="email" id="cf-email" name="email" required placeholder="your@email.com" />
+        </div>
+
+        <div class="form-group">
+            <label for="cf-message">Message</label>
+            <textarea id="cf-message" name="message" rows="5" required placeholder="Your message…"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="cf-submit">
+            Send Message
+        </button>
+
+        <p id="cf-status" class="form-status hidden"></p>
+    </form>
+</section>
+
+<script>
+    (function() {
+        const FORM_ID = 'YOUR_FORMSPREE_FORM_ID';
+        const ENDPOINT = 'https://formspree.io/f/' + FORM_ID;
+
+        var form = document.getElementById('contact-form');
+        var status = document.getElementById('cf-status');
+        var submitBtn = document.getElementById('cf-submit');
+
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending…';
+            status.classList.add('hidden');
+
+            var data = {
+                name: form.name.value.trim(),
+                email: form.email.value.trim(),
+                message: form.message.value.trim(),
+            };
+
+            fetch(ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            })
+            .then(function(res) {
+                if (res.ok) {
+                    status.textContent = 'Message sent successfully!';
+                    status.className = 'form-status form-success';
+                    form.reset();
+                } else {
+                    return res.text().then(function(body) {
+                        throw new Error(body || 'HTTP ' + res.status);
+                    });
+                }
+            })
+            .catch(function(err) {
+                console.error('Formspree error:', err);
+                status.textContent = 'Failed to send. Please try again later.';
+                status.className = 'form-status form-error';
+            })
+            .finally(function() {
+                status.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Message';
+            });
+        });
+    })();
+</script>
