@@ -214,7 +214,7 @@ export default class Scene {
         const progress = Math.min(this.score / 1800, 1); // difficulty ramps over ~30 s
         // Constant speed: the game runs at the same fast speed from the
         // very beginning – no acceleration ramp.
-        const speedFactor = 1.45;
+        const speedFactor = 1.3;
 
         // Player (gravity scales with speed so jumps land faster)
         this.player.update(this.groundY, speedFactor);

@@ -145,6 +145,9 @@ async function unlockWebsite() {
     Router.init(els.pageContent);
     await Router.resolve();
 
+    // Reset countdown display so a fresh session starts in the normal color
+    if (els.timerText) els.timerText.style.color = '';
+
     // Start the 10-minute countdown
     UnlockTimer.start(
         // onExpire
@@ -167,10 +170,18 @@ async function unlockWebsite() {
 
 function lockWebsite() {
     AudioManager.stopBackground();
+    AudioManager.playSFX('audio/end.mp3');
 
-    // Time is up: reload the whole page so the user lands back on the
-    // start screen (loading → intro) with all state reset.
-    location.reload();
+    // Hide the unlocked website again (CSS fade-out on .screen.hidden),
+    // then switch back to the start screen. In-page navigation is used
+    // instead of location.reload() – full reloads are unreliable or
+    // blocked in several mobile / in-app browsers.
+    screens.website.classList.add('hidden');
+
+    setTimeout(() => {
+        showOnly(screens.intro);
+        State.reset();
+    }, 700); // just after the CSS transition (0.6s)
 }
 
 /* ── Initialization ── */
