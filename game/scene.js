@@ -5,8 +5,8 @@
  * scene.js – Game Scene (Side-scrolling runner)
  *
  * Flat ground. Jump over floor-level beer mugs, walk under
- * high ones. Floating musical notes drift across the screen.
- * Survive to the score threshold to win.
+ * high ones. Floating musical notes and shopping glyphs drift across
+ * the screen. Survive to the score threshold to win.
  */
 
 import Player from './player.js';
@@ -15,8 +15,15 @@ import { Beer } from './obstacle.js';
 /* ── Win threshold ~60 s at 60 fps ── */
 const WIN_SCORE = 3600;
 
-/* ── Note characters ── */
-const NOTE_CHARS = ['♩', '♪', '♫', '♬', '𝄞', '𝄢'];
+/* ── Global size scale (1.5 = everything 50% bigger) ── */
+const SCALE = 1.5;
+
+/* ── Floating glyphs: music notes + shopping / discounter symbols ── */
+const NOTE_CHARS = ['♩', '♪', '♫', '♬', '𝄞', '𝄢', '🛒', '🏷', '€', '$', '%', '🍺'];
+
+/* ── Background sign (stacked rows) ── */
+const SIGN_LINES = ['Beer', 'Olympics', '2026'];
+const SIGN_ALPHA = 0.14;
 
 export default class Scene {
     constructor(canvas) {
@@ -40,9 +47,6 @@ export default class Scene {
         this._onLose = null;
         this._onScore = null;
         this._onJump = null;
-
-        this.banners = [];
-        this._nextBannerId = 0;
     }
 
     /* ── Lifecycle ── */
@@ -50,8 +54,8 @@ export default class Scene {
     init(width, height) {
         this.width = width;
         this.height = height;
-        this.groundY = height - 60;
-        this.player = new Player(120, this.groundY, this.groundY);
+        this.groundY = height - 60 * SCALE;
+        this.player = new Player(120 * SCALE, this.groundY, this.groundY, SCALE);
         this.obstacles = [];
         this.notes = [];
         this.score = 0;
@@ -59,7 +63,6 @@ export default class Scene {
         this.won = false;
         this.framesSinceLastSpawn = 0;
         this.framesSinceNote = 0;
-        this.banners = [];
     }
 
     setCallbacks(onWin, onLose, onScore, onJump) {
@@ -113,8 +116,8 @@ export default class Scene {
 
     /**
      * Called on touchstart.
-     * Records the start position and time for swipe detection.
-     * A quick tap (no significant movement) triggers a jump.
+     * Records the start position; jump is deferred to touchend
+     * so swipe-down to duck is not preceded by an unwanted jump.
      * @param {number} x  Touch X
      * @param {number} y  Touch Y
      */
@@ -124,10 +127,6 @@ export default class Scene {
         this._touchStartY = y;
         this._touchStartTime = performance.now();
         this._touchMoved = false;
-
-        // Immediate jump on touch — the swipe-down duck check
-        // happens on move/end so the player can react to obstacles.
-        this._performJump();
     }
 
     /**
@@ -150,9 +149,21 @@ export default class Scene {
 
     /**
      * Called on touchend.
-     * Releases ducking if it was active.
+     * If the finger did not move significantly (a tap), jump.
+     * Always release ducking.
      */
     handleTouchEnd() {
+        if (this.gameOver) {
+            if (this.player) this.player.setDucking(false);
+            return;
+        }
+
+        // No significant movement → treat as a tap → jump
+        if (!this._touchMoved) {
+            this._performJump();
+        }
+
+        // Release ducking
         if (this.player && this.player.isDucking) {
             this.player.setDucking(false);
         }
@@ -213,9 +224,6 @@ export default class Scene {
 
         // Move notes
         this._updateNotes();
-
-        // Banners
-        this._updateBanners();
     }
 
     /* ── Beer spawning ── */
@@ -229,23 +237,25 @@ export default class Scene {
             flightOffset = 0;
         } else if (roll < 0.8) {
             // Head height → duck under (player 38px standing, 20px ducking)
-            flightOffset = 24 + Math.random() * 12; // 24–36 px above ground
+            flightOffset = (24 + Math.random() * 12) * SCALE; // 24–36 px above ground
         } else {
             // Above head → walk under safely
-            flightOffset = 85 + Math.random() * 25;
+            flightOffset = (85 + Math.random() * 25) * SCALE;
         }
-        this.obstacles.push(new Beer(this.width + 40, this.groundY, flightOffset));
+        this.obstacles.push(new Beer(this.width + 40 * SCALE, this.groundY, flightOffset, SCALE));
     }
 
     /* ── Musical notes ── */
 
     _spawnNote() {
         const char = NOTE_CHARS[Math.floor(Math.random() * NOTE_CHARS.length)];
+        const NOTE_COLORS = ['#FFD400', '#FF6900', '#FFF8E0'];
         this.notes.push({
             char,
-            x: this.width + 20,
-            y: 40 + Math.random() * (this.groundY - 80),
-            size: 18 + Math.random() * 22,
+            color: NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)],
+            x: this.width + 20 * SCALE,
+            y: 40 * SCALE + Math.random() * (this.groundY - 80 * SCALE),
+            size: (18 + Math.random() * 22) * SCALE,
             speed: 1 + Math.random() * 0.8,
             phase: Math.random() * Math.PI * 2,
             amplitude: 5 + Math.random() * 12,
@@ -259,7 +269,7 @@ export default class Scene {
             const n = this.notes[i];
             n.x -= n.speed;
             n.y += Math.sin(this.score * n.frequency + n.phase) * 0.4;
-            if (n.x + 30 < 0) this.notes.splice(i, 1);
+            if (n.x + n.size < 0) this.notes.splice(i, 1);
         }
     }
 
@@ -308,44 +318,6 @@ export default class Scene {
                a.y < b.y + b.h && a.y + a.h > b.y;
     }
 
-    /* ── Scrolling banners ── */
-
-    _getRandomPhrase() {
-        const PHRASES = [
-            { en: 'Keep going!',        de: 'Weiter so!',      es: '¡Sigue así!' },
-            { en: 'You can do it!',     de: 'Du schaffst es!', es: '¡Tú puedes!' },
-            { en: 'Almost there!',      de: 'Fast geschafft!', es: '¡Casi llegas!' },
-            { en: 'Nice jump!',         de: 'Guter Sprung!',   es: '¡Buen salto!' },
-            { en: 'Stay focused!',      de: 'Bleib dran!',     es: '¡Mantén el enfoque!' },
-            { en: 'You rock!',          de: 'Du bist super!',  es: '¡Eres genial!' },
-        ];
-        return PHRASES[Math.floor(Math.random() * PHRASES.length)];
-    }
-
-    _spawnBanner() {
-        const langs = ['en', 'de', 'es'];
-        const phrase = this._getRandomPhrase();
-        const lang = langs[Math.floor(Math.random() * langs.length)];
-        const text = phrase[lang];
-        this.banners.push({
-            id: this._nextBannerId++,
-            text,
-            x: this.width + 50,
-            y: 60 + Math.random() * 100,
-            speed: 1.2 + Math.random() * 0.8,
-        });
-    }
-
-    _updateBanners() {
-        if (this.score % 200 === 0 && this.banners.length < 3) this._spawnBanner();
-        if (this.banners.length === 0) this._spawnBanner();
-        for (let i = this.banners.length - 1; i >= 0; i--) {
-            const b = this.banners[i];
-            b.x -= b.speed;
-            if (b.x + b.text.length * 12 < -20) this.banners.splice(i, 1);
-        }
-    }
-
     /* ═══════════════════════════════════════════════
        RENDERING
        ═══════════════════════════════════════════════ */
@@ -361,7 +333,6 @@ export default class Scene {
         this._drawBackground(ctx, W, H, GY);
         this._drawNotes(ctx);
         this._drawObstacles(ctx);
-        this._drawBanners(ctx);
         if (this.player) this.player.render(ctx);
     }
 
@@ -372,10 +343,13 @@ export default class Scene {
         ctx.fillStyle = '#0f0f1a';
         ctx.fillRect(0, 0, W, H);
 
-        // Subtle sky gradient
+        // Huge background sign (behind everything, slightly transparent)
+        this._drawSign(ctx, W, H);
+
+        // Subtle sky gradient (faint theme tint, no bright orange)
         const grad = ctx.createLinearGradient(0, 0, 0, H);
-        grad.addColorStop(0, 'rgba(1, 90, 162, 0.06)');
-        grad.addColorStop(0.5, 'rgba(238, 28, 37, 0.03)');
+        grad.addColorStop(0, 'rgba(255, 212, 0, 0.05)');
+        grad.addColorStop(0.5, 'rgba(255, 212, 0, 0.02)');
         grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, W, H);
@@ -387,22 +361,35 @@ export default class Scene {
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, W, H);
 
-        // Ground
-        ctx.fillStyle = '#015AA2';
+        // Horizon glow above the ground line (subtle theme light)
+        const glow = ctx.createLinearGradient(0, GY - 120, 0, GY);
+        glow.addColorStop(0, 'rgba(255, 212, 0, 0)');
+        glow.addColorStop(1, 'rgba(255, 212, 0, 0.07)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, GY - 120, W, 120);
+
+        // Ground: dark slate surface (matches the site theme, no bright orange)
+        const groundGrad = ctx.createLinearGradient(0, GY, 0, H);
+        groundGrad.addColorStop(0, '#23233C');
+        groundGrad.addColorStop(1, '#12121F');
+        ctx.fillStyle = groundGrad;
         ctx.fillRect(0, GY, W, H - GY);
 
-        // Ground top line
-        ctx.strokeStyle = '#FFF200';
+        // Glowing ground top line (neon theme accent)
+        ctx.save();
+        ctx.shadowColor = 'rgba(255, 212, 0, 0.75)';
+        ctx.shadowBlur = 10;
+        ctx.strokeStyle = '#FFD400';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(0, GY);
         ctx.lineTo(W, GY);
         ctx.stroke();
+        ctx.restore();
 
-        // Ground stripes
-        ctx.strokeStyle = '#FFF200';
+        // Subtle scrolling lane dashes on the ground
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
         ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.15;
         const offset = this.score % 30;
         for (let x = 0; x < W; x += 30) {
             const sx = x - offset;
@@ -412,6 +399,44 @@ export default class Scene {
             ctx.lineTo(sx + 10, GY + 10);
             ctx.stroke();
         }
+    }
+
+    /* ── Huge background sign ── */
+
+    _drawSign(ctx, W, H) {
+        const lines = SIGN_LINES;
+
+        // Give every row its own font size so each line spans the complete width
+        const refSize = 100;
+        const maxW = W * 0.99;
+        ctx.font = `900 ${refSize}px "Segoe UI", system-ui, sans-serif`;
+        const sizes = lines.map((line) => {
+            const tw = ctx.measureText(line).width;
+            return (refSize * maxW) / Math.max(1, tw);
+        });
+
+        // Stack the rows, centered vertically as a block.
+        // Each row individually fills the width; on screens where the stack
+        // is taller than the viewport the outer rows bleed off the edges.
+        const lineHFactor = 1.0;
+        const lineHs = sizes.map((sz) => sz * lineHFactor);
+        let totalH = 0;
+        for (let i = 0; i < lineHs.length; i++) {
+            totalH += (i === 0 || i === lineHs.length - 1) ? lineHs[i] / 2 : lineHs[i];
+        }
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.globalAlpha = SIGN_ALPHA;
+        ctx.fillStyle = '#FFD400';
+
+        let y = (H - totalH) / 2 + lineHs[0] / 2;
+        for (let i = 0; i < lines.length; i++) {
+            ctx.font = `900 ${sizes[i]}px "Segoe UI", system-ui, sans-serif`;
+            ctx.fillText(lines[i], W / 2, y);
+            if (i + 1 < lines.length) y += (lineHs[i] + lineHs[i + 1]) / 2;
+        }
+
         ctx.globalAlpha = 1;
     }
 
@@ -421,8 +446,8 @@ export default class Scene {
         ctx.save();
         for (const n of this.notes) {
             ctx.globalAlpha = n.opacity;
-            ctx.fillStyle = '#FFF8E0';
-            ctx.font = `${n.size}px "Segoe UI Symbol", "Arial Unicode MS", sans-serif`;
+            ctx.fillStyle = n.color;
+            ctx.font = `${n.size}px "Segoe UI Emoji", "Segoe UI Symbol", "Arial Unicode MS", sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(n.char, n.x, n.y);
@@ -436,20 +461,5 @@ export default class Scene {
         for (const obs of this.obstacles) {
             obs.render(ctx);
         }
-    }
-
-    /* ── Banners ── */
-
-    _drawBanners(ctx) {
-        ctx.save();
-        for (const b of this.banners) {
-            ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.fillText(b.text, b.x + 2, b.y + 2);
-            ctx.fillStyle = '#FFF8E0';
-            ctx.fillText(b.text, b.x, b.y);
-        }
-        ctx.restore();
     }
 }

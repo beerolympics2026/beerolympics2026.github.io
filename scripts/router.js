@@ -2,10 +2,10 @@
  * This file was generated with the assistance of AI.
  */
 /**
- * router.js – Client-Side Page Router
+ * router.js – Single-Page Content Loader
  *
- * Loads HTML fragments into the main content area based on the URL hash.
- * Supports hash-based navigation (no page reloads).
+ * Always loads pages/home.html into the main content area.
+ * Supports anchor scrolling via URL hash (#section-history, etc.).
  */
 
 const Router = {
@@ -15,11 +15,8 @@ const Router = {
     /** @type {HTMLElement|null} */
     _websiteContainer: null,
 
-    /** @type {string} */
-    _currentPage: '',
-
-    /** @type {Object<string, string>} Cache of loaded HTML. */
-    _cache: {},
+    /** @type {boolean} */
+    _loaded: false,
 
     /**
      * Initialize the router.
@@ -32,74 +29,56 @@ const Router = {
     },
 
     /**
-     * Navigate to a page.
-     * @param {string} page  Page name (e.g., 'home', 'gallery').
+     * Load the single page and scroll to any hash target.
      */
-    async navigate(page) {
-        const hash = `#${page}`;
-        if (window.location.hash !== hash) {
-            window.location.hash = hash;
-        } else {
-            await this._loadPage(page);
+    async resolve() {
+        if (!this._loaded) {
+            await this._loadPage();
+        }
+        this._scrollToHash();
+    },
+
+    /** @private */
+    async _loadPage() {
+        const url = 'pages/home.html';
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const html = await res.text();
+            this._container.innerHTML = html;
+            this._executeScripts(this._container);
+            this._loaded = true;
+            this._applyTheme('home');
+        } catch (err) {
+            console.error(`Router: failed to load "${url}"`, err);
+            this._container.innerHTML = '<h1>404</h1><p>Page not found.</p>';
         }
     },
 
-    /**
-     * Detect and load the page from the current hash.
-     * Called on initial load.
-     */
-    async resolve() {
-        const hash = window.location.hash.replace('#', '') || 'home';
-        await this._loadPage(hash);
-    },
-
-    /**
-     * @returns {string}
-     */
-    getCurrentPage() {
-        return this._currentPage;
-    },
-
     /** @private */
-    async _onHashChange() {
-        const page = window.location.hash.replace('#', '') || 'home';
-        await this._loadPage(page);
+    _onHashChange() {
+        this._scrollToHash();
+        this._updateActiveNav();
     },
 
-    /** @private */
-    async _loadPage(page) {
-        if (page === this._currentPage) return;
-        const url = `pages/${page}.html`;
-
-        try {
-            let html = this._cache[url];
-            if (!html) {
-                const res = await fetch(url);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                html = await res.text();
-                this._cache[url] = html;
-            }
-            this._container.innerHTML = html;
-            this._executeScripts(this._container);
-            this._currentPage = page;
-            this._applyTheme(page);
-            this._updateActiveNav(page);
-        } catch (err) {
-            console.error(`Router: failed to load "${url}"`, err);
-            this._container.innerHTML = `<h1>404</h1><p>Page not found.</p>`;
+    /** @private – Smooth-scroll to the section matching the current hash. */
+    _scrollToHash() {
+        const id = window.location.hash.replace('#', '');
+        if (!id) return;
+        const el = this._container.querySelector(`#${id}`);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     },
 
     /**
      * Re-execute any <script> elements inside injected HTML.
-     * innerHTML does not execute scripts by default.
      * @private
      * @param {HTMLElement} root
      */
     _executeScripts(root) {
         root.querySelectorAll('script').forEach((oldScript) => {
             const newScript = document.createElement('script');
-            // Copy attributes
             for (const attr of oldScript.attributes) {
                 newScript.setAttribute(attr.name, attr.value);
             }
@@ -108,26 +87,21 @@ const Router = {
         });
     },
 
-    /**
-     * Set the colour-theme class on the website container.
-     * @private
-     * @param {string} page
-     */
+    /** @private */
     _applyTheme(page) {
         if (!this._websiteContainer) return;
-        // Remove all theme-* classes
         this._websiteContainer.className = this._websiteContainer.className
             .split(' ')
             .filter((c) => !c.startsWith('theme-'))
             .join(' ');
-        // Add the new theme class
         this._websiteContainer.classList.add(`theme-${page}`);
     },
 
     /** @private */
-    _updateActiveNav(page) {
+    _updateActiveNav() {
+        const hash = window.location.hash.replace('#', '') || 'section-hero';
         document.querySelectorAll('.nav-link').forEach((link) => {
-            const isActive = link.dataset.page === page;
+            const isActive = link.getAttribute('href') === `#${hash}`;
             link.classList.toggle('active', isActive);
         });
     },

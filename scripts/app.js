@@ -41,7 +41,6 @@ const els = {
     timerText: $('access-timer-text'),
     timerFill: $('access-timer-fill'),
     pageContent: $('page-content'),
-    mobileTapHint: $('mobile-tap-hint'),
 };
 
 /* ── Screen Helpers ── */
@@ -55,44 +54,6 @@ function showOnly(...screensToShow) {
         const shouldShow = screensToShow.includes(s);
         s.classList.toggle('hidden', !shouldShow);
     });
-}
-
-/**
- * Detect if the user is on a touch-capable device.
- * @returns {boolean}
- */
-function isTouchDevice() {
-    return (
-        'ontouchstart' in window ||
-        navigator.maxTouchPoints > 0
-    );
-}
-
-/** @type {number|null} Timer id for auto-hiding the mobile hint. */
-let _mobileHintTimeout = null;
-
-/**
- * Show the mobile tap hint briefly (touch devices only).
- * Hides automatically after 4 seconds or on first touch.
- */
-function showMobileTapHint() {
-    if (!els.mobileTapHint || !isTouchDevice()) return;
-
-    // Make sure the CSS desktop-only media query hasn't hidden it
-    els.mobileTapHint.classList.remove('hidden');
-
-    // Auto-hide after 4 seconds
-    clearTimeout(_mobileHintTimeout);
-    _mobileHintTimeout = setTimeout(() => {
-        hideMobileTapHint();
-    }, 4000);
-}
-
-function hideMobileTapHint() {
-    if (!els.mobileTapHint) return;
-    els.mobileTapHint.classList.add('hidden');
-    clearTimeout(_mobileHintTimeout);
-    _mobileHintTimeout = null;
 }
 
 /* ── Loading Phase ── */
@@ -116,9 +77,6 @@ function startGame() {
     AudioManager.init();
     AudioManager.playBackground();
 
-    // Show mobile touch hint on touch devices
-    showMobileTapHint();
-
     // Reset and start the game
     Game.reset();
     Game.start();
@@ -140,8 +98,8 @@ function onGameWin() {
 }
 
 function onGameLose() {
-    els.gameResultTitle.textContent = 'Game Over';
-    els.gameResultMessage.textContent = 'Try again!';
+    els.gameResultTitle.textContent = 'The Cashier Said "Nope".';
+    els.gameResultMessage.textContent = 'Do you even want to register? ... Try again!';
     showGameOverlay(true);
 }
 
@@ -151,7 +109,7 @@ function showGameOverlay(show) {
 
 function restartGame() {
     showGameOverlay(false);
-    showMobileTapHint();
+    AudioManager.playBackground();
     Game.reset();
     Game.start();
 }
@@ -235,15 +193,7 @@ async function init() {
         });
     }
 
-    // ── 5. Hide mobile hint on first touch ──
-    const gameCanvas = document.getElementById('game-canvas');
-    if (gameCanvas) {
-        gameCanvas.addEventListener('touchstart', () => {
-            hideMobileTapHint();
-        }, { once: true, passive: true });
-    }
-
-    // ── 6. Initialize the game system ──
+    // ── 5. Initialize the game system ──
     Game.init('game-canvas', onGameWin, onGameLose);
 }
 

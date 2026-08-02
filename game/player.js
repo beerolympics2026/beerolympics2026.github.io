@@ -13,16 +13,18 @@ export default class Player {
      * @param {number} x       Fixed screen X (centre of player)
      * @param {number} y       Starting Y (bottom / feet)
      * @param {number} groundY Current ground Y
+     * @param {number} scale   Size multiplier (default 1)
      */
-    constructor(x, y, groundY) {
+    constructor(x, y, groundY, scale = 1) {
+        this.scale = scale;
         this.fixedX = x;
         this.x = x;
         this.y = y;
         this.groundY = groundY;
 
-        this.width = 28;
-        this.height = 38;
-        this.duckHeight = 20;           // hitbox when ducking
+        this.width = 28 * scale;
+        this.height = 38 * scale;
+        this.duckHeight = 20 * scale;           // hitbox when ducking
         this.vy = 0;
         this.gravity = 0.55;
         this.jumpPower = -11;
@@ -33,6 +35,7 @@ export default class Player {
 
         this.runFrame = 0;
         this.runTimer = 0;
+        this.wheelAngle = 0;   // drives wheel-spoke rotation + subtle bounce
     }
 
     /** Effective hitbox height (shorter when ducking). */
@@ -76,13 +79,14 @@ export default class Player {
             }
         }
 
-        // Run animation
+        // Run animation (wheels roll + spokes spin while grounded)
         if (this.isOnGround && !this.isDucking) {
             this.runTimer += 1;
             if (this.runTimer > 6) {
                 this.runTimer = 0;
                 this.runFrame = (this.runFrame + 1) % 2;
             }
+            this.wheelAngle += 0.15;
         } else {
             this.runFrame = 0;
         }
@@ -98,32 +102,122 @@ export default class Player {
         };
     }
 
-    /** Render player. */
+    /** Render player (shopping cart). */
     render(ctx) {
-        const b = this.getBounds();
+        const s = this.scale;
+        const cx = this.x;
+        const bottom = this.y;   // wheels rest on this line
+        const duck = this.isDucking;
+        const bounce = this.isOnGround ? Math.sin(this.wheelAngle * 2) * 0.6 * s : 0;
 
-        // ── Body ──
-        ctx.fillStyle = '#015AA2';
-        ctx.fillRect(b.x, b.y, b.w, b.h);
+        /* ── Soft ground shadow (modern depth cue, fades while airborne) ── */
+        const air = Math.min(1, Math.max(0, (this.groundY - bottom) / 150));
+        ctx.fillStyle = `rgba(0, 0, 0, ${0.28 * (1 - air)})`;
+        ctx.beginPath();
+        ctx.ellipse(cx, bottom - 1, (16 - air * 5) * s, (3.5 - air * 1.2) * s, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-        // ── Chest stripe ──
-        ctx.fillStyle = '#FFF200';
-        const stripeY = b.y + (this.isDucking ? 6 : 14);
-        ctx.fillRect(b.x, stripeY, b.w, this.isDucking ? 4 : 6);
+        /* ── Wheels ── */
+        const wheelR = (duck ? 3 : 4) * s;
+        const wheelY = bottom - wheelR;
+        const axleGap = 9 * s;
 
-        // ── Eye ──
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(b.x + b.w - 10, b.y + (this.isDucking ? 4 : 8), 5, 5);
-        ctx.fillStyle = '#111';
-        ctx.fillRect(b.x + b.w - 9, b.y + (this.isDucking ? 5 : 9), 3, 3);
+        ctx.fillStyle = '#1E1E1E';
+        for (const dir of [-1, 1]) {
+            const wx = cx + dir * axleGap;
+            ctx.beginPath();
+            ctx.arc(wx, wheelY, wheelR, 0, Math.PI * 2);
+            ctx.fill();
 
-        // ── Legs (hidden when ducking) ──
-        if (!this.isDucking) {
-            ctx.fillStyle = '#003D80';
-            const legOff = this.isOnGround ? (this.runFrame === 0 ? 0 : -4) : 0;
-            ctx.fillRect(b.x + 4, b.y + b.h, 8, 8 + legOff);
-            ctx.fillRect(b.x + b.w - 12, b.y + b.h, 8,
-                8 + (this.isOnGround && this.runFrame === 0 ? -4 : 0));
+            // Hub
+            ctx.fillStyle = '#FF6900';
+            ctx.beginPath();
+            ctx.arc(wx, wheelY, wheelR * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Spoke (rotates while rolling)
+            ctx.strokeStyle = '#1E1E1E';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(wx - Math.cos(this.wheelAngle) * wheelR * 0.7, wheelY - Math.sin(this.wheelAngle) * wheelR * 0.7);
+            ctx.lineTo(wx + Math.cos(this.wheelAngle) * wheelR * 0.7, wheelY + Math.sin(this.wheelAngle) * wheelR * 0.7);
+            ctx.stroke();
+
+            ctx.fillStyle = '#1E1E1E';
+        }
+
+        /* ── Basket geometry ── */
+        const basketBase = wheelY - wheelR + 2 * s;
+        const basketH = (duck ? 10 : 22) * s;
+        const basketTop = basketBase - basketH + bounce;
+        const halfWTop = (duck ? 10 : 13) * s;
+        const halfWBot = (duck ? 8 : 11) * s;
+
+        /* ── Handle (behind the basket) ── */
+        const handleUp = (duck ? 5 : 12) * s;
+
+        // Dark outline first – keeps the handle visible against any background
+        ctx.strokeStyle = 'rgba(30, 30, 30, 0.7)';
+        ctx.lineWidth = 4.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(cx - halfWTop * 0.6, basketTop);
+        ctx.quadraticCurveTo(
+            cx - halfWTop - 8 * s,
+            basketTop - handleUp * 0.7,
+            cx - halfWTop - 4 * s,
+            basketTop - handleUp
+        );
+        ctx.stroke();
+
+        // Handle bar (slightly darker cream so it reads as background)
+        ctx.strokeStyle = '#E9DCB4';
+        ctx.lineWidth = 2.75 * s;
+        ctx.beginPath();
+        ctx.moveTo(cx - halfWTop * 0.6, basketTop);
+        ctx.quadraticCurveTo(
+            cx - halfWTop - 8 * s,
+            basketTop - handleUp * 0.7,
+            cx - halfWTop - 4 * s,
+            basketTop - handleUp
+        );
+        ctx.stroke();
+
+        /* ── Basket (flared, wire-mesh, in front of the handle) ── */
+        ctx.fillStyle = 'rgba(255, 212, 0, 0.9)';
+        ctx.beginPath();
+        ctx.moveTo(cx - halfWTop, basketTop);
+        ctx.lineTo(cx + halfWTop, basketTop);
+        ctx.lineTo(cx + halfWBot, basketBase);
+        ctx.lineTo(cx - halfWBot, basketBase);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#1E1E1E';
+        ctx.lineWidth = 1.5 * s;
+        ctx.stroke();
+
+        // Horizontal mesh lines
+        ctx.strokeStyle = 'rgba(30, 30, 30, 0.45)';
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 4; i++) {
+            const t = i / 4;
+            const y = basketTop + (basketBase - basketTop) * t;
+            const hw = halfWTop + (halfWBot - halfWTop) * t;
+            ctx.beginPath();
+            ctx.moveTo(cx - hw, y);
+            ctx.lineTo(cx + hw, y);
+            ctx.stroke();
+        }
+
+        // Vertical mesh lines (follow the flare)
+        for (let i = 1; i < 3; i++) {
+            const t = i / 3;
+            const xTop = cx - halfWTop + 2 * halfWTop * t;
+            const xBase = cx - halfWBot + 2 * halfWBot * t;
+            ctx.beginPath();
+            ctx.moveTo(xTop, basketTop);
+            ctx.lineTo(xBase, basketBase);
+            ctx.stroke();
         }
     }
 }

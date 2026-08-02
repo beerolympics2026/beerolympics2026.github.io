@@ -50,7 +50,7 @@ const Game = {
             },
             (score) => {
                 const el = document.getElementById('game-score');
-                if (el) el.textContent = `Score: ${score}`;
+                if (el) el.textContent = `NO MATH: ${score}`;
             },
             () => { AudioManager.playSFX('audio/jump.mp3', 0.5); }
         );
