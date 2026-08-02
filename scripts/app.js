@@ -21,6 +21,7 @@ import AudioManager from './audio.js';
 import UnlockTimer from './timer.js';
 import Router from './router.js';
 import Game from '../game/game.js';
+import { WIN_BEERS } from '../game/scene.js';
 
 /* ── DOM References ── */
 const $ = (id) => document.getElementById(id);
@@ -59,8 +60,8 @@ function showOnly(...screensToShow) {
 /* ── Loading Phase ── */
 async function runLoading() {
     showOnly(screens.loading);
-    // Simulate loading time (1.5s matches the CSS animation)
-    await new Promise((r) => setTimeout(r, 1500));
+    // Simulate loading time (3s matches the CSS animation)
+    await new Promise((r) => setTimeout(r, 3000));
 }
 
 /* ── Intro Phase ── */
@@ -75,6 +76,7 @@ function startGame() {
 
     // Init audio on user gesture
     AudioManager.init();
+    AudioManager.resetBackground();
     AudioManager.playBackground();
 
     // Reset and start the game
@@ -88,7 +90,7 @@ function onGameWin() {
 
     // Show victory overlay briefly, then transition to website
     els.gameResultTitle.textContent = 'Victory!';
-    els.gameResultMessage.textContent = 'Website unlocked for 5 minutes.';
+    els.gameResultMessage.textContent = `You collected all ${WIN_BEERS} beers! Website unlocked for 5 minutes.`;
     showGameOverlay(true);
 
     setTimeout(() => {
@@ -109,6 +111,7 @@ function showGameOverlay(show) {
 
 function restartGame() {
     showGameOverlay(false);
+    AudioManager.resetBackground();
     AudioManager.playBackground();
     Game.reset();
     Game.start();

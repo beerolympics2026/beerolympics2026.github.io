@@ -113,7 +113,7 @@ html, body {
     height: 100%;
     background: #6c63ff;
     border-radius: 2px;
-    animation: loading-fill 1.5s ease-in-out forwards;
+    animation: loading-fill 3s ease-in-out forwards;
 }
 
 /* ── Intro Screen ── */
@@ -142,6 +142,25 @@ html, body {
     font-size: 1.1rem;
     color: #888;
     margin-bottom: 2.5rem;
+}
+
+/* ── Music credit (intro screen) ── */
+.music-credit {
+    margin-top: 1.75rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.03em;
+    color: #555;
+}
+
+.music-credit a {
+    color: #777;
+    text-decoration: none;
+    border-bottom: 1px dotted #555;
+    transition: color 0.2s;
+}
+
+.music-credit a:hover {
+    color: #aaa;
 }
 
 /* ── Buttons ── */
@@ -550,7 +569,7 @@ html, body {
 .hero-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(1, 1, 1, 0.55);
+    background: rgba(1, 1, 1, 0.62);
 }
 
 .hero-content {
@@ -571,14 +590,17 @@ html, body {
 
 .hero-subtitle {
     font-size: 1.4rem;
-    font-weight: 500;
-    color: #ddd;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 16px rgba(0, 0, 0, 0.85);
     margin-bottom: 1.5rem;
 }
 
 .hero-description {
-    font-size: 1rem;
-    color: #bbb;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 14px rgba(0, 0, 0, 0.8);
     line-height: 1.75;
 }
 

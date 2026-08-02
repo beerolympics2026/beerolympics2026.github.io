@@ -7,7 +7,7 @@
  * Bridges the side-scrolling runner scene with the application.
  */
 
-import Scene from './scene.js';
+import Scene, { WIN_BEERS } from './scene.js';
 import AudioManager from '../scripts/audio.js';
 
 const Game = {
@@ -48,12 +48,21 @@ const Game = {
                 AudioManager.playSFX('audio/end.mp3');
                 onLose();
             },
-            (score) => {
+            () => {}, // running score no longer displayed – HUD shows beer count
+            () => { AudioManager.playSFX('audio/jump.mp3', 0.5); },
+            (count, total) => {
                 const el = document.getElementById('game-score');
-                if (el) el.textContent = `NO MATH: ${score}`;
-            },
-            () => { AudioManager.playSFX('audio/jump.mp3', 0.5); }
+                if (el) el.textContent = `NO MATH BEERS: ${count}/${total}`;
+                // Each collected beer changes the background song
+                // (skip on the winning collection – the victory jingle follows)
+                if (count < total) AudioManager.playNextBackground();
+            }
         );
+
+        // Initialise the HUD beer counter so it matches the win condition
+        // from the very first frame (index.html only holds a static fallback).
+        const hudEl = document.getElementById('game-score');
+        if (hudEl) hudEl.textContent = `NO MATH BEERS: 0/${WIN_BEERS}`;
 
         // Keyboard
         this._onKeyDown = (e) => {
@@ -131,6 +140,10 @@ const Game = {
         if (this.scene) {
             this.scene.init(this.canvas.width, this.canvas.height);
         }
+        // Reset the HUD beer counter to its initial state – the scene resets
+        // its internal count, and the HUD text must match immediately.
+        const el = document.getElementById('game-score');
+        if (el) el.textContent = `NO MATH BEERS: 0/${WIN_BEERS}`;
     },
 
     /**

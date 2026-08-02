@@ -2,13 +2,79 @@
  * This file was generated with the assistance of AI.
  */
 /**
- * obstacle.js – Obstacle Entities
+ * obstacle.js – Obstacle & Collectible Entities
  *
- * Beer mugs at two height levels: floor (jump over) or
- * above head (walk under).
+ * Blocks: obstacles to avoid (jump over floor blocks, duck under
+ * head-height blocks).
+ * Beers: collectibles that spawn occasionally. Collect WIN_BEERS
+ * to win the game.
  */
 
-/* ── Beer (ground or flying) ── */
+/* ── Block (ground or flying obstacle) ── */
+
+/* Block colors – picked randomly per block from the site theme palette */
+const BLOCK_COLORS = ['#FF6900', '#FFD400', '#EE1C25', '#015AA2', '#9B51E0', '#2BC4B4'];
+
+export class Block {
+    /**
+     * @param {number} x            Centre X
+     * @param {number} groundY      Ground Y
+     * @param {number} flightOffset How high above ground the block floats (0 = on ground)
+     * @param {number} scale        Size multiplier (default 1)
+     * @param {number} [speed]      Movement speed in px/frame (default 5 * scale)
+     */
+    constructor(x, groundY, flightOffset = 0, scale = 1, speed = null) {
+        this.type = 'block';
+        this.scale = scale;
+        this.x = x;
+        this.groundY = groundY;
+        this.y = groundY - flightOffset;   // visual / collision bottom
+        this.flightOffset = flightOffset;
+        this.width = 26 * scale;
+        this.height = (30 + Math.floor(Math.random() * 10)) * scale;
+        this.speed = speed || 4 * scale;
+        this.color = BLOCK_COLORS[Math.floor(Math.random() * BLOCK_COLORS.length)];
+        this.passed = false;
+    }
+
+    update() { this.x -= this.speed; }
+
+    isOffScreen() { return this.x + this.width < 0; }
+
+    getBounds() {
+        return {
+            x: this.x - this.width / 2,
+            y: this.y - this.height,
+            w: this.width,
+            h: this.height,
+        };
+    }
+
+    render(ctx) {
+        const cx = this.x;
+        const bottom = this.y;
+        const hw = this.width / 2;
+        const h = this.height;
+
+        // Colored body (no glow)
+        ctx.fillStyle = this.color;
+        ctx.fillRect(cx - hw, bottom - h, this.width, h);
+
+        // Subtle depth: light on top, dark at the bottom
+        const grad = ctx.createLinearGradient(0, bottom - h, 0, bottom);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0.28)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(cx - hw, bottom - h, this.width, h);
+
+        // Thin darker outline for contrast
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(cx - hw, bottom - h, this.width, h);
+    }
+}
+
+/* ── Beer (collectible) ── */
 
 export class Beer {
     /**
@@ -16,18 +82,19 @@ export class Beer {
      * @param {number} groundY      Ground Y
      * @param {number} flightOffset How high above ground the mug floats (0 = on ground)
      * @param {number} scale        Size multiplier (default 1)
+     * @param {number} [speed]      Movement speed in px/frame (default 5 * scale)
      */
-    constructor(x, groundY, flightOffset = 0, scale = 1) {
+    constructor(x, groundY, flightOffset = 0, scale = 1, speed = null) {
         this.type = 'beer';
         this.scale = scale;
         this.x = x;
         this.groundY = groundY;
-        this.y = groundY - flightOffset;   // visual / collision centre
+        this.y = groundY - flightOffset;   // visual / collision bottom
         this.flightOffset = flightOffset;
         this.glassW = 24 * scale;
-        this.glassH = (34 + Math.floor(Math.random() * 8)) * scale;
+        this.glassH = (30 + Math.floor(Math.random() * 6)) * scale;
         this.foamH = (8 + Math.floor(Math.random() * 4)) * scale;
-        this.speed = 5 * scale;
+        this.speed = speed || 4 * scale;
         this.beerShade = `hsl(42, ${75 + Math.random() * 15}%, ${55 + Math.random() * 15}%)`;
         this.passed = false;
     }
@@ -53,6 +120,11 @@ export class Beer {
         const bodyH = this.glassH;
         const foamH = this.foamH;
         const ti = 2 * s;
+
+        // Soft glow so collectibles stand out against the dark background
+        ctx.save();
+        ctx.shadowColor = 'rgba(255, 212, 0, 0.6)';
+        ctx.shadowBlur = 16;
 
         // Glass
         ctx.fillStyle = 'rgba(255, 220, 150, 0.3)';
@@ -110,7 +182,7 @@ export class Beer {
         ctx.beginPath();
         ctx.arc(cx + hw - 2 * s, bottom - bodyH * 0.6, 8 * s, -0.6, 0.6, false);
         ctx.stroke();
+
+        ctx.restore();
     }
 }
-
-

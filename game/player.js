@@ -10,12 +10,16 @@
 
 export default class Player {
     /**
-     * @param {number} x       Fixed screen X (centre of player)
-     * @param {number} y       Starting Y (bottom / feet)
-     * @param {number} groundY Current ground Y
-     * @param {number} scale   Size multiplier (default 1)
+     * @param {number} x           Fixed screen X (centre of player)
+     * @param {number} y           Starting Y (bottom / feet)
+     * @param {number} groundY     Current ground Y
+     * @param {number} scale       Size multiplier (default 1)
+     * @param {number} [driveSpeed] Base horizontal speed of the world
+     *                              (px/frame). Gravity and jump power are
+     *                              derived from it so the jump stays
+     *                              consistent if BASE_SPEED changes.
      */
-    constructor(x, y, groundY, scale = 1) {
+    constructor(x, y, groundY, scale = 1, driveSpeed = 6) {
         this.scale = scale;
         this.fixedX = x;
         this.x = x;
@@ -26,8 +30,18 @@ export default class Player {
         this.height = 38 * scale;
         this.duckHeight = 20 * scale;           // hitbox when ducking
         this.vy = 0;
-        this.gravity = 0.55;
-        this.jumpPower = -11;
+
+        // Physics are coupled to the world's base drive speed so that
+        // increasing BASE_SPEED automatically re-scales the jump:
+        //   gravity   ∝ v²  → keeps the jump APEX (120 px) constant
+        //   jumpPower ∝ v   → keeps the horizontal JUMP DISTANCE (240 px) constant
+        // Reference values (v = 6 px/frame): gravity 0.6, jumpPower −12.
+        this.driveSpeed = driveSpeed;
+        const V_REF = 6;
+        this.gravity = 0.6 * (driveSpeed / V_REF) ** 2;
+        this.jumpPower = -12 * (driveSpeed / V_REF);
+
+        this.speedFactor = 1;   // game-speed multiplier driving gravity scale
         this.isOnGround = false;
 
         // Duck
@@ -46,7 +60,9 @@ export default class Player {
     /** Apply jump. */
     jump() {
         if (!this.isOnGround) return;
-        this.vy = this.jumpPower;
+        // Jump power scales with √speed so the jump REACH stays identical
+        // while gravity scaling makes the cart land sooner at higher speeds.
+        this.vy = this.jumpPower * Math.sqrt(this.speedFactor);
         this.isOnGround = false;
     }
 
@@ -57,13 +73,17 @@ export default class Player {
 
     /**
      * Advance one frame.
-     * @param {number} groundY  Current ground level
+     * @param {number} groundY        Current ground level
+     * @param {number} [speedFactor]  Game-speed multiplier (1 = normal);
+     *                                gravity scales with it so the cart
+     *                                lands faster when the game speeds up.
      */
-    update(groundY) {
+    update(groundY, speedFactor = 1) {
         this.groundY = groundY;
+        this.speedFactor = speedFactor;
 
         // Gravity
-        this.vy += this.gravity;
+        this.vy += this.gravity * speedFactor;
         this.y += this.vy;
 
         // Clamp X to fixed position
@@ -79,14 +99,16 @@ export default class Player {
             }
         }
 
-        // Run animation (wheels roll + spokes spin while grounded)
+        // Run animation (wheels roll + spokes spin while grounded).
+        // Spin rate follows the actual drive speed, so the wheels roll
+        // slowly at the start and spin up as the game accelerates.
         if (this.isOnGround && !this.isDucking) {
             this.runTimer += 1;
             if (this.runTimer > 6) {
                 this.runTimer = 0;
                 this.runFrame = (this.runFrame + 1) % 2;
             }
-            this.wheelAngle += 0.15;
+            this.wheelAngle += 0.02 * this.driveSpeed * this.speedFactor;
         } else {
             this.runFrame = 0;
         }
@@ -115,6 +137,15 @@ export default class Player {
         ctx.fillStyle = `rgba(0, 0, 0, ${0.28 * (1 - air)})`;
         ctx.beginPath();
         ctx.ellipse(cx, bottom - 1, (16 - air * 5) * s, (3.5 - air * 1.2) * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        /* ── Warm glow under the cart (theme pop on the dark background) ── */
+        const glow = ctx.createRadialGradient(cx, bottom, 0, cx, bottom, 28 * s);
+        glow.addColorStop(0, 'rgba(255, 105, 0, 0.25)');
+        glow.addColorStop(1, 'rgba(255, 105, 0, 0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.ellipse(cx, bottom, 28 * s, 8 * s, 0, 0, Math.PI * 2);
         ctx.fill();
 
         /* ── Wheels ── */
@@ -183,6 +214,9 @@ export default class Player {
         ctx.stroke();
 
         /* ── Basket (flared, wire-mesh, in front of the handle) ── */
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+        ctx.shadowBlur = 8 * s;
         ctx.fillStyle = 'rgba(255, 212, 0, 0.9)';
         ctx.beginPath();
         ctx.moveTo(cx - halfWTop, basketTop);
@@ -191,6 +225,7 @@ export default class Player {
         ctx.lineTo(cx - halfWBot, basketBase);
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
 
         ctx.strokeStyle = '#1E1E1E';
         ctx.lineWidth = 1.5 * s;
