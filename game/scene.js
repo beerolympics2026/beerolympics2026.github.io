@@ -55,6 +55,8 @@ export default class Scene {
         this.framesSinceBeer = 0;
         this._animationId = null;
         this._signCache = null;
+        this._accumulator = 0;
+        this._lastTime = 0;
 
         this._onWin = null;
         this._onLose = null;
@@ -79,6 +81,7 @@ export default class Scene {
         this.framesSinceLastSpawn = 0;
         this.framesSinceBeer = 0;
         this._signCache = null; // rebuilt on resize – the background sign layout depends on W/H
+        this._accumulator = 0;
     }
 
     setCallbacks(onWin, onLose, onScore, onJump, onCollect) {
@@ -199,10 +202,23 @@ export default class Scene {
     /* ── Main loop ── */
 
     _loop(now) {
+        // Fixed-timestep simulation: the game always advances at exactly
+        // 60 steps/s, independent of the display refresh rate (60/90/120 Hz).
+        // Without this, 90/120 Hz phones would run the whole game up to 2×
+        // faster than a 60 Hz device.
+        const STEP_MS = 1000 / 60;
+        const delta = Math.min(now - this._lastTime, 50); // clamp huge gaps (tab switches)
+        this._lastTime = now;
+
         if (!this.gameOver) {
-            this._update();
-            this._checkCollisions();
-            this._checkWinLose();
+            this._accumulator += delta;
+            while (this._accumulator >= STEP_MS) {
+                this._update();
+                this._checkCollisions();
+                this._checkWinLose();
+                this._accumulator -= STEP_MS;
+                if (this.gameOver) break;
+            }
         }
         this._render();
         this._animationId = requestAnimationFrame((t) => this._loop(t));
@@ -214,7 +230,11 @@ export default class Scene {
         const progress = Math.min(this.score / 1800, 1); // difficulty ramps over ~30 s
         // Constant speed: the game runs at the same fast speed from the
         // very beginning – no acceleration ramp.
-        const speedFactor = 1.3;
+        //
+        // On narrow (phone) screens the world moves a bit slower so the
+        // player gets enough reaction time on the smaller visible track.
+        // Full speed only kicks in at ~1100 px width and above.
+        const speedFactor = 1.3 * Math.max(0.75, Math.min(1, this.width / 1100));
 
         // Player (gravity scales with speed so jumps land faster)
         this.player.update(this.groundY, speedFactor);
