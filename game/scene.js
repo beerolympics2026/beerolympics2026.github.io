@@ -26,6 +26,10 @@ const BASE_SPEED = 5 * SCALE;
  *    smaller than the tightest block spacing so the zone always clears. ── */
 const SPAWN_GUARD = 140;
 
+/* ── Grace period before the first obstacle appears: the player gets
+ *    ~2.5 s of empty track to get ready before the first crate spawns. ── */
+const FIRST_BLOCK_DELAY = 150;
+
 /* ── Background sign (stacked rows) ── */
 const SIGN_LINES = ['Beer', 'Olympics', '2026'];
 const SIGN_ALPHA = 0.3;
@@ -224,7 +228,7 @@ export default class Scene {
         // always clears and beers can keep spawning).
         this.framesSinceLastSpawn += 1;
         const spawnRate = Math.max(24, 50 - progress * 22);
-        if (this.framesSinceLastSpawn >= spawnRate && !this.gameOver) {
+        if (this.framesSinceLastSpawn >= spawnRate && this.score >= FIRST_BLOCK_DELAY && !this.gameOver) {
             this.framesSinceLastSpawn = 0;
             this._spawnBlock(speedFactor);
         }

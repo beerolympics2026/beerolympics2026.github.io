@@ -39,6 +39,7 @@ const els = {
     gameResultTitle: $('game-result-title'),
     gameResultMessage: $('game-result-message'),
     gameRestartBtn: $('game-restart-btn'),
+    gameStartNote: $('game-start-note'),
     timerText: $('access-timer-text'),
     timerFill: $('access-timer-fill'),
     pageContent: $('page-content'),
@@ -71,6 +72,21 @@ function showIntro() {
 }
 
 /* ── Game Phase ── */
+let startNoteTimer = null;
+
+/**
+ * Show the orientation tip for a few seconds at the start of a game.
+ * It is a pure overlay – the player can ignore it and play right away.
+ */
+function showStartNote() {
+    if (!els.gameStartNote) return;
+    els.gameStartNote.classList.remove('hidden');
+    clearTimeout(startNoteTimer);
+    startNoteTimer = setTimeout(() => {
+        els.gameStartNote.classList.add('hidden');
+    }, 4000);
+}
+
 function startGame() {
     showOnly(screens.game);
 
@@ -82,6 +98,9 @@ function startGame() {
     // Reset and start the game
     Game.reset();
     Game.start();
+
+    // Brief orientation tip ("landscape / desktop view")
+    showStartNote();
 }
 
 function onGameWin() {
@@ -115,6 +134,7 @@ function restartGame() {
     AudioManager.playBackground();
     Game.reset();
     Game.start();
+    showStartNote();
 }
 
 /* ── Website Unlock ── */
@@ -147,16 +167,10 @@ async function unlockWebsite() {
 
 function lockWebsite() {
     AudioManager.stopBackground();
-    AudioManager.playSFX('audio/end.mp3');
 
-    // The CSS class .hidden already has opacity/visibility transitions (0.6s).
-    // Add the class to start the fade-out, then switch to intro after the transition.
-    screens.website.classList.add('hidden');
-
-    setTimeout(() => {
-        showOnly(screens.intro);
-        State.reset();
-    }, 700); // just after CSS transition (0.6s)
+    // Time is up: reload the whole page so the user lands back on the
+    // start screen (loading → intro) with all state reset.
+    location.reload();
 }
 
 /* ── Initialization ── */
