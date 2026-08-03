@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Beer Olympics 2026</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='20' y='32' width='46' height='52' rx='5' fill='%23FFD400'/%3E%3Crect x='62' y='40' width='12' height='30' rx='4' fill='%23FFD400'/%3E%3Crect x='20' y='32' width='46' height='12' fill='%23FFF5CC'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="style/main.css" />
@@ -45,7 +45,21 @@
             </div>
         </div>
         <div id="game-start-note" class="game-start-note hidden">
-            Tip: This game is best played in landscape mode. On a smartphone, turn your phone sideways or switch to the desktop view.
+            Tap to jump · Swipe down to duck · Collect the beers! Landscape mode is preferable.
+        </div>
+
+        <!-- ── Pre-game instructions notification (must be accepted before the game starts) ── -->
+        <div id="game-instructions" class="hidden" role="dialog" aria-modal="true" aria-labelledby="instructions-title">
+            <div class="instructions-modal">
+                <h2 id="instructions-title">Ready to Play?</h2>
+                <ul class="instructions-list">
+                    <li><span class="instructions-tag">Jump</span>Tap the screen to jump over the crates.</li>
+                    <li><span class="instructions-tag">Dodge</span>Swipe down and hold to duck under them.</li>
+                    <li><span class="instructions-tag">Collect</span>Grab all the beers to win the game.</li>
+                    <li><span class="instructions-tag">Tip</span>Landscape (horizontal) mode is preferable.</li>
+                </ul>
+                <button id="instructions-accept-btn" class="btn btn-primary btn-lg">Easy - Lets go!</button>
+            </div>
         </div>
     </div>
 

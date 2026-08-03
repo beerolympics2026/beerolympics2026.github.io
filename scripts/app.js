@@ -40,6 +40,8 @@ const els = {
     gameResultMessage: $('game-result-message'),
     gameRestartBtn: $('game-restart-btn'),
     gameStartNote: $('game-start-note'),
+    instructionsModal: $('game-instructions'),
+    instructionsAcceptBtn: $('instructions-accept-btn'),
     timerText: $('access-timer-text'),
     timerFill: $('access-timer-fill'),
     pageContent: $('page-content'),
@@ -85,6 +87,29 @@ function showStartNote() {
     startNoteTimer = setTimeout(() => {
         els.gameStartNote.classList.add('hidden');
     }, 4000);
+}
+
+/* ── Pre-game instructions notification ── */
+
+/**
+ * Show the "how to play" notification and switch to the game screen.
+ * The game is NOT started yet – it only begins once the player presses
+ * "Easy - Lets go!".
+ */
+function showGameInstructions() {
+    showOnly(screens.game);
+    if (els.instructionsModal) els.instructionsModal.classList.remove('hidden');
+}
+
+/** Hide the pre-game notification. */
+function hideGameInstructions() {
+    if (els.instructionsModal) els.instructionsModal.classList.add('hidden');
+}
+
+/** Player accepted the notification → start the actual game. */
+function acceptGameInstructions() {
+    hideGameInstructions();
+    startGame();
 }
 
 function startGame() {
@@ -198,14 +223,23 @@ async function init() {
         AudioManager.setEnabled(true);
         AudioManager.init();
         AudioManager.playSFX('audio/start.mp3');
-        startGame();
+        // Show the pre-game notification; the game only starts after it is
+        // accepted via "Easy - Lets go!".
+        showGameInstructions();
     });
 
+    els.instructionsAcceptBtn.addEventListener('click', acceptGameInstructions);
     els.gameRestartBtn.addEventListener('click', restartGame);
 
-    // Keyboard shortcut: Space to start from intro
+    // Keyboard shortcut: Space to start from intro / accept the notification
     document.addEventListener('keydown', (e) => {
         if (e.code === 'Space' || e.code === 'Enter') {
+            // First accept the pre-game notification if it is visible
+            if (els.instructionsModal && !els.instructionsModal.classList.contains('hidden')) {
+                e.preventDefault();
+                els.instructionsAcceptBtn.click();
+                return;
+            }
             if (!screens.intro.classList.contains('hidden') && !State.get('gameStarted')) {
                 e.preventDefault();
                 els.startBtn.click();

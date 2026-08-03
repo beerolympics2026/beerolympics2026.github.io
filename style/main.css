@@ -58,6 +58,7 @@ html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
+    overscroll-behavior: none;        /* no pull-to-refresh / overscroll glow on phones */
     font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
     background: var(--theme-bg);
     color: var(--theme-text);
@@ -175,6 +176,7 @@ html, body {
     transition: transform 0.2s, box-shadow 0.25s, background 0.25s;
     text-decoration: none;
     letter-spacing: 0.01em;
+    touch-action: manipulation;       /* no double-tap-zoom delay on phones */
 }
 
 .btn:hover {
@@ -277,6 +279,88 @@ html, body {
 #game-start-note.hidden {
     opacity: 0;
     visibility: hidden;
+}
+
+/* ── Pre-game instructions notification ── */
+#game-instructions {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 15, 26, 0.88);
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#game-instructions.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.instructions-modal {
+    width: min(100%, 430px);
+    max-height: 92%;
+    overflow-y: auto;
+    padding: 1.75rem 1.5rem;
+    text-align: center;
+    background: linear-gradient(160deg, #1a1a2e 0%, #15152a 100%);
+    border: 1px solid rgba(255, 212, 0, 0.35);
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    animation: fade-in-up 0.4s ease-out;
+}
+
+.instructions-modal h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.9rem;
+    color: #FFD400;
+    letter-spacing: 0.01em;
+}
+
+.instructions-list {
+    list-style: none;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    text-align: left;
+}
+
+.instructions-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: #c8c8c8;
+}
+
+.instructions-tag {
+    flex-shrink: 0;
+    min-width: 78px;
+    padding: 0.18rem 0.5rem;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #1E1E1E;
+    background: #FFD400;
+    border-radius: 6px;
+}
+
+/* Large touch-friendly confirm button for the notification */
+.btn-lg {
+    width: 100%;
+    min-height: 52px;
+    padding: 0.85rem 1.5rem;
+    font-size: 1.05rem;
+    border-radius: 10px;
 }
 
 .overlay-content {
@@ -1092,6 +1176,24 @@ html, body {
     .overlay-content p {
         font-size: 0.85rem;
         margin-bottom: 1rem;
+    }
+
+    /* Pre-game instructions on small phones */
+    .instructions-modal {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .instructions-modal h2 {
+        font-size: 1.3rem;
+    }
+
+    .instructions-list li {
+        font-size: 0.9rem;
+    }
+
+    .instructions-tag {
+        min-width: 68px;
+        font-size: 0.7rem;
     }
 
     .btn-secondary {

@@ -15,11 +15,29 @@ import { Block, Beer } from './obstacle.js';
 /* ── Win condition: collect this many beers ── */
 export const WIN_BEERS = 10;
 
-/* ── Global size scale (1.5 = everything 50% bigger) ── */
-const SCALE = 1.5;
+/* ── Sprite size scale ──
+ * Desktop-width screens (>= 1100 px) get the chunky 1.5× sprites. On
+ * narrow phone screens the scale shrinks towards 1.0 so the world is
+ * not "zoomed in": player and obstacles stay small, more of the track
+ * ahead is visible and there is more time to react. ── */
+const SCALE_MAX = 1.5;
+const SCALE_MIN = 1.0;
+const SCALE_FULL_WIDTH = 1100; // viewport width (px) at which max scale applies
+const SCALE_NARROW_WIDTH = 320; // viewport width (px) at which min scale applies
 
-/* ── Base drive speed of blocks & beers (px/frame) at game start ── */
-const BASE_SPEED = 5 * SCALE;
+/** Size scale for a given viewport width. */
+function scaleForWidth(width) {
+    if (width >= SCALE_FULL_WIDTH) return SCALE_MAX;
+    const t = Math.max(0, (width - SCALE_NARROW_WIDTH) / (SCALE_FULL_WIDTH - SCALE_NARROW_WIDTH));
+    return SCALE_MIN + t * (SCALE_MAX - SCALE_MIN);
+}
+
+/* ── Base drive speed of blocks & beers (px/frame) at game start ──
+ * Derived from the current sprite scale, so smaller phone sprites also
+ * move at a calmer pace. */
+function baseSpeedFor(scale) {
+    return 5 * scale;
+}
 
 /* ── Spawn-safety zone: no new entity spawns while another entity is
  *    within this many px of the right edge (prevents overlap). Must be
@@ -43,6 +61,8 @@ export default class Scene {
 
         this.width = 0;
         this.height = 0;
+        this.scale = SCALE_MAX;
+        this.baseSpeed = baseSpeedFor(this.scale);
         this.groundY = 0;
         this.player = null;
         this.obstacles = [];
@@ -70,8 +90,10 @@ export default class Scene {
     init(width, height) {
         this.width = width;
         this.height = height;
-        this.groundY = height - 60 * SCALE;
-        this.player = new Player(120 * SCALE, this.groundY, this.groundY, SCALE, BASE_SPEED);
+        this.scale = scaleForWidth(width);
+        this.baseSpeed = baseSpeedFor(this.scale);
+        this.groundY = height - 60 * this.scale;
+        this.player = new Player(120 * this.scale, this.groundY, this.groundY, this.scale, this.baseSpeed);
         this.obstacles = [];
         this.beers = [];
         this.score = 0;
@@ -233,8 +255,8 @@ export default class Scene {
         //
         // On narrow (phone) screens the world moves a bit slower so the
         // player gets enough reaction time on the smaller visible track.
-        // Full speed only kicks in at ~1100 px width and above.
-        const speedFactor = 1.3 * Math.max(0.75, Math.min(1, this.width / 1100));
+        // Full speed only kicks in at ~1300 px width and above.
+        const speedFactor = 1.3 * Math.max(0.5, Math.min(1, this.width / 1300));
 
         // Player (gravity scales with speed so jumps land faster)
         this.player.update(this.groundY, speedFactor);
@@ -288,24 +310,24 @@ export default class Scene {
             flightOffset = 0;
         } else if (roll < 0.8) {
             // Head height → duck under (player 38px standing, 20px ducking)
-            flightOffset = (24 + Math.random() * 12) * SCALE; // 24–36 px above ground
+            flightOffset = (24 + Math.random() * 12) * this.scale; // 24–36 px above ground
         } else {
             // Above head → walk under safely
-            flightOffset = (85 + Math.random() * 25) * SCALE;
+            flightOffset = (85 + Math.random() * 25) * this.scale;
         }
         this.obstacles.push(new Block(
-            this.width + 40 * SCALE,
+            this.width + 40 * this.scale,
             this.groundY,
             flightOffset,
-            SCALE,
-            BASE_SPEED * speedFactor
+            this.scale,
+            this.baseSpeed * speedFactor
         ));
     }
 
     /* ── Beer (collectible) spawning ── */
 
     _spawnBeer(speedFactor = 1) {
-        const spawnX = this.width + 40 * SCALE;
+        const spawnX = this.width + 40 * this.scale;
 
         // Avoid spawning a beer on top of a block or another beer that is
         // still near the right edge – keeps collectibles and obstacles apart.
@@ -318,9 +340,9 @@ export default class Scene {
         if (Math.random() < 0.55) {
             flightOffset = 0;                                   // on the ground
         } else {
-            flightOffset = (30 + Math.random() * 40) * SCALE;   // requires a jump
+            flightOffset = (30 + Math.random() * 40) * this.scale;   // requires a jump
         }
-        this.beers.push(new Beer(spawnX, this.groundY, flightOffset, SCALE, BASE_SPEED * speedFactor));
+        this.beers.push(new Beer(spawnX, this.groundY, flightOffset, this.scale, this.baseSpeed * speedFactor));
         return true;
     }
 
