@@ -253,10 +253,10 @@ export default class Scene {
         // Constant speed: the game runs at the same fast speed from the
         // very beginning – no acceleration ramp.
         //
-        // On narrow (phone) screens the world moves a bit slower so the
-        // player gets enough reaction time on the smaller visible track.
-        // Full speed only kicks in at ~1300 px width and above.
-        const speedFactor = 1.3 * Math.max(0.5, Math.min(1, this.width / 1300));
+        // On narrow (phone) screens the world moves noticeably slower so
+        // the player gets enough reaction time on the smaller visible
+        // track. Full speed only kicks in at ~1500 px width and above.
+        const speedFactor = 1.1 * Math.max(0.4, Math.min(1, this.width / 1500));
 
         // Player (gravity scales with speed so jumps land faster)
         this.player.update(this.groundY, speedFactor);
@@ -298,9 +298,12 @@ export default class Scene {
     /* ── Block spawning ── */
 
     _spawnBlock(speedFactor = 1) {
-        // Avoid spawning a block on top of a beer that is still near the
-        // right edge – keeps collectibles and obstacles apart.
-        if (this.beers.some((e) => e.x > this.width - SPAWN_GUARD)) return;
+        // Avoid spawning a block on top of a beer OR another block that is
+        // still near the right edge – keeps obstacles and collectibles apart.
+        // Without the block-vs-block check, consecutive blocks could spawn so
+        // close together that no jump timing can clear them both.
+        const nearEdge = (e) => e.x > this.width - SPAWN_GUARD;
+        if (this.beers.some(nearEdge) || this.obstacles.some(nearEdge)) return;
 
         // Three levels: 50% floor, 30% duck height, 20% safe above
         const roll = Math.random();
@@ -335,7 +338,7 @@ export default class Scene {
         if (this.obstacles.some(nearEdge) || this.beers.some(nearEdge)) return false;
 
         // Mix: ground-level (collect by running) and jump-level
-        // (reachable with a jump – player jumps ~110 px high)
+        // (reachable with a jump – player jumps ~133 px high)
         let flightOffset;
         if (Math.random() < 0.55) {
             flightOffset = 0;                                   // on the ground

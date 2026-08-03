@@ -33,13 +33,15 @@ export default class Player {
 
         // Physics are coupled to the world's base drive speed so that
         // increasing BASE_SPEED automatically re-scales the jump:
-        //   gravity   ∝ v²  → keeps the jump APEX (120 px) constant
-        //   jumpPower ∝ v   → keeps the horizontal JUMP DISTANCE (240 px) constant
-        // Reference values (v = 6 px/frame): gravity 0.6, jumpPower −12.
+        //   gravity   ∝ v²  → keeps the jump APEX (~133 px) constant
+        //   jumpPower ∝ v   → keeps the horizontal JUMP DISTANCE constant
+        // Reference values (v = 6 px/frame): gravity 1.5, jumpPower −20.
+        // Gravity is deliberately high: the jump is snappy, so the player
+        // lands quickly and can re-jump between consecutive obstacles.
         this.driveSpeed = driveSpeed;
         const V_REF = 6;
-        this.gravity = 0.6 * (driveSpeed / V_REF) ** 2;
-        this.jumpPower = -12 * (driveSpeed / V_REF);
+        this.gravity = 1.5 * (driveSpeed / V_REF) ** 2;
+        this.jumpPower = -20 * (driveSpeed / V_REF);
 
         this.speedFactor = 1;   // game-speed multiplier driving gravity scale
         this.isOnGround = false;
