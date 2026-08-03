@@ -44,9 +44,6 @@
                 <button id="game-restart-btn" class="btn btn-secondary">YES, hold my beer ....</button>
             </div>
         </div>
-        <div id="game-start-note" class="game-start-note hidden">
-            Tap to jump · Swipe down to duck · Collect the beers! Landscape mode is preferable.
-        </div>
 
         <!-- ── Pre-game instructions notification (must be accepted before the game starts) ── -->
         <div id="game-instructions" class="hidden" role="dialog" aria-modal="true" aria-labelledby="instructions-title">
@@ -56,7 +53,6 @@
                     <li><span class="instructions-tag">Jump</span>Tap the screen to jump over the crates.</li>
                     <li><span class="instructions-tag">Dodge</span>Swipe down and hold to duck under them.</li>
                     <li><span class="instructions-tag">Collect</span>Grab all the beers to win the game.</li>
-                    <li><span class="instructions-tag">Tip</span>Landscape (horizontal) mode is preferable.</li>
                 </ul>
                 <button id="instructions-accept-btn" class="btn btn-primary btn-lg">Easy - Lets go!</button>
             </div>
@@ -65,12 +61,6 @@
 
     <!-- ── Website Container (hidden until unlocked) ── -->
     <div id="website-container" class="screen hidden">
-        <!-- Timer Bar -->
-        <div id="access-timer-bar">
-            <span id="access-timer-text">10:00 remaining</span>
-            <div id="access-timer-fill"></div>
-        </div>
-
         <!-- Navigation removed -->
         <nav id="main-nav" class="hidden">
             <ul>

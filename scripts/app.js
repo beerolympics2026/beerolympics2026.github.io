@@ -5,20 +5,18 @@
  * app.js – Main Application Entry Point
  *
  * Orchestrates the entire application:
- * - Loading → Intro → Game → Website (unlocked) → Timer → Expiry → Reset
+ * - Loading → Intro → Game → Website (unlocked)
  *
  * Flow:
  *   1. Show loading screen (simulated)
  *   2. Show intro screen with Start button
- *   3. On Start → hide intro → init audio → start game
- *   4. Win  → hide game → unlock website → start 10-min timer
+ *   3. On Start → show pre-game notification → start game
+ *   4. Win  → hide game → unlock website
  *   5. Lose → show game overlay with restart option
- *   6. Timer expires → fade website → return to intro
  */
 
 import State from './state.js';
 import AudioManager from './audio.js';
-import UnlockTimer from './timer.js';
 import Router from './router.js';
 import Game from '../game/game.js';
 import { WIN_BEERS } from '../game/scene.js';
@@ -39,11 +37,8 @@ const els = {
     gameResultTitle: $('game-result-title'),
     gameResultMessage: $('game-result-message'),
     gameRestartBtn: $('game-restart-btn'),
-    gameStartNote: $('game-start-note'),
     instructionsModal: $('game-instructions'),
     instructionsAcceptBtn: $('instructions-accept-btn'),
-    timerText: $('access-timer-text'),
-    timerFill: $('access-timer-fill'),
     pageContent: $('page-content'),
 };
 
@@ -74,20 +69,6 @@ function showIntro() {
 }
 
 /* ── Game Phase ── */
-let startNoteTimer = null;
-
-/**
- * Show the orientation tip for a few seconds at the start of a game.
- * It is a pure overlay – the player can ignore it and play right away.
- */
-function showStartNote() {
-    if (!els.gameStartNote) return;
-    els.gameStartNote.classList.remove('hidden');
-    clearTimeout(startNoteTimer);
-    startNoteTimer = setTimeout(() => {
-        els.gameStartNote.classList.add('hidden');
-    }, 4000);
-}
 
 /* ── Pre-game instructions notification ── */
 
@@ -123,9 +104,6 @@ function startGame() {
     // Reset and start the game
     Game.reset();
     Game.start();
-
-    // Brief orientation tip ("landscape / desktop view")
-    showStartNote();
 }
 
 function onGameWin() {
@@ -134,7 +112,7 @@ function onGameWin() {
 
     // Show victory overlay briefly, then transition to website
     els.gameResultTitle.textContent = 'Victory!';
-    els.gameResultMessage.textContent = `You collected all ${WIN_BEERS} beers! Website unlocked for 5 minutes.`;
+    els.gameResultMessage.textContent = `You collected all ${WIN_BEERS} beers! Website unlocked.`;
     showGameOverlay(true);
 
     setTimeout(() => {
@@ -159,7 +137,6 @@ function restartGame() {
     AudioManager.playBackground();
     Game.reset();
     Game.start();
-    showStartNote();
 }
 
 /* ── Website Unlock ── */
@@ -169,44 +146,6 @@ async function unlockWebsite() {
     // Initialize the router
     Router.init(els.pageContent);
     await Router.resolve();
-
-    // Reset countdown display so a fresh session starts in the normal color
-    if (els.timerText) els.timerText.style.color = '';
-
-    // Start the 10-minute countdown
-    UnlockTimer.start(
-        // onExpire
-        () => {
-            lockWebsite();
-        },
-        // onTick
-        ({ minutes, seconds, percent }) => {
-            const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} remaining`;
-            if (els.timerText) els.timerText.textContent = timeStr;
-            if (els.timerFill) els.timerFill.style.width = `${percent}%`;
-
-            // Warn when < 30 seconds
-            if (minutes === 0 && seconds <= 30) {
-                els.timerText.style.color = '#ff5252';
-            }
-        }
-    );
-}
-
-function lockWebsite() {
-    AudioManager.stopBackground();
-    AudioManager.playSFX('audio/end.mp3');
-
-    // Hide the unlocked website again (CSS fade-out on .screen.hidden),
-    // then switch back to the start screen. In-page navigation is used
-    // instead of location.reload() – full reloads are unreliable or
-    // blocked in several mobile / in-app browsers.
-    screens.website.classList.add('hidden');
-
-    setTimeout(() => {
-        showOnly(screens.intro);
-        State.reset();
-    }, 700); // just after the CSS transition (0.6s)
 }
 
 /* ── Initialization ── */

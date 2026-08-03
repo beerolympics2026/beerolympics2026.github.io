@@ -72,7 +72,8 @@ export default class Scene {
         this.gameOver = false;
         this.won = false;
         this.framesSinceLastSpawn = 0;
-        this.framesSinceBeer = 0;
+        this.blocksSinceBeer = 0;
+        this.blocksUntilNextBeer = 3; // first beer after this many obstacles
         this._animationId = null;
         this._signCache = null;
         this._accumulator = 0;
@@ -101,7 +102,8 @@ export default class Scene {
         this.gameOver = false;
         this.won = false;
         this.framesSinceLastSpawn = 0;
-        this.framesSinceBeer = 0;
+        this.blocksSinceBeer = 0;
+        this.blocksUntilNextBeer = 3; // first beer after this many obstacles
         this._signCache = null; // rebuilt on resize – the background sign layout depends on W/H
         this._accumulator = 0;
     }
@@ -256,7 +258,7 @@ export default class Scene {
         // On narrow (phone) screens the world moves noticeably slower so
         // the player gets enough reaction time on the smaller visible
         // track. Full speed only kicks in at ~1500 px width and above.
-        const speedFactor = 1.1 * Math.max(0.4, Math.min(1, this.width / 1500));
+        const speedFactor = 1.15 * Math.max(0.4, Math.min(1, this.width / 1500));
 
         // Player (gravity scales with speed so jumps land faster)
         this.player.update(this.groundY, speedFactor);
@@ -272,22 +274,26 @@ export default class Scene {
         const spawnRate = Math.max(24, 50 - progress * 22);
         if (this.framesSinceLastSpawn >= spawnRate && this.score >= FIRST_BLOCK_DELAY && !this.gameOver) {
             this.framesSinceLastSpawn = 0;
-            this._spawnBlock(speedFactor);
+            // Count only actually-spawned blocks (the guard may skip one);
+            // the beer cadence below is measured in obstacles.
+            if (this._spawnBlock(speedFactor)) this.blocksSinceBeer += 1;
         }
 
         // Move obstacles
         this.obstacles.forEach((o) => o.update());
         this.obstacles = this.obstacles.filter((o) => !o.isOffScreen());
 
-        // Spawn beer collectibles at a constant rate – equal distance
-        // between consecutive beers (constant speed × fixed interval).
-        this.framesSinceBeer += 1;
-        const beerRate = 120; // every ~2 s at 60 fps
-        if (this.framesSinceBeer >= beerRate && this.beers.length < 2) {
+        // Spawn beer collectibles after a random gap of 2–4 obstacles since
+        // the last beer, instead of on a fixed timer or after every single
+        // obstacle. The counter only advances when a block actually spawned.
+        if (this.blocksSinceBeer >= this.blocksUntilNextBeer && this.beers.length < 2) {
             // Only restart the wait when a beer was actually spawned. If the
-            // spawn line is briefly blocked, retry next frame instead of
-            // waiting another full interval – keeps the gap short.
-            if (this._spawnBeer(speedFactor)) this.framesSinceBeer = 0;
+            // spawn line is briefly blocked or two beers are still on screen,
+            // retry next frame instead of waiting another full interval.
+            if (this._spawnBeer(speedFactor)) {
+                this.blocksSinceBeer = 0;
+                this.blocksUntilNextBeer = 2 + Math.floor(Math.random() * 3); // 2–4 obstacles
+            }
         }
 
         // Move beers
@@ -303,7 +309,7 @@ export default class Scene {
         // Without the block-vs-block check, consecutive blocks could spawn so
         // close together that no jump timing can clear them both.
         const nearEdge = (e) => e.x > this.width - SPAWN_GUARD;
-        if (this.beers.some(nearEdge) || this.obstacles.some(nearEdge)) return;
+        if (this.beers.some(nearEdge) || this.obstacles.some(nearEdge)) return false;
 
         // Three levels: 50% floor, 30% duck height, 20% safe above
         const roll = Math.random();
@@ -325,6 +331,7 @@ export default class Scene {
             this.scale,
             this.baseSpeed * speedFactor
         ));
+        return true;
     }
 
     /* ── Beer (collectible) spawning ── */
